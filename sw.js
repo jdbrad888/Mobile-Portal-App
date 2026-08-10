@@ -1,5 +1,5 @@
 /* Ally QR Assist — service worker (offline app shell) */
-const CACHE = 'ally-qr-assist-v1';
+const CACHE = 'ally-qr-assist-2026-08-09';
 const SHELL = [
   'index.html',
   'manifest.webmanifest',
