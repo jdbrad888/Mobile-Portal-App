@@ -852,7 +852,7 @@ input,textarea,select{font-size:16px}
 .ask-wrap{margin:2px 0 8px}
 .ask-box{display:flex;align-items:flex-start;gap:9px;background:rgba(255,255,255,.06);border:1px solid rgba(188,210,255,.28);border-radius:13px;padding:11px 13px}
 .ask-box .ask-spark{width:18px;height:18px;flex:none;margin-top:2px}
-.ask-box textarea{flex:1;background:none;border:none;outline:none;color:var(--p-text);font-family:inherit;font-size:16px;line-height:1.35;resize:none;min-width:0;padding:1px 0}
+.ask-box textarea{flex:1;background:none;border:none;outline:none;color:var(--p-text);font-family:inherit;font-size:16px;line-height:1.35;resize:none;min-width:0;padding:1px 0;overflow:hidden}
 .ask-box textarea::placeholder{color:var(--p-g2)}
 .ask-row{display:flex;gap:8px;margin-top:8px}
 .ask-mic{width:46px;flex:none;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border:1px solid var(--p-line);border-radius:11px;cursor:pointer;padding:10px 0}
@@ -2252,6 +2252,21 @@ button.rep-rec{cursor:pointer}
 .rn-dot{width:7px;height:7px;border-radius:50%;background:#ff4d4d;flex:none}
 .rn-s{font-size:11.5px;color:var(--p-g2);line-height:1.4}
 .rn-w{font-size:10.5px;color:var(--p-g3)}
+.pin-acct-box{margin:8px 0 0}
+.pin-sug{border:1px solid var(--p-line);border-radius:12px;margin-top:6px;overflow:hidden;background:var(--p-card)}
+.pin-sug-r{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:none;border:none;border-top:1px solid var(--p-line);padding:11px 13px;color:var(--p-text);font-family:inherit;cursor:pointer;text-align:left}
+.pin-sug-r:first-child{border-top:none}
+.pin-sug-r:active{background:rgba(255,255,255,.05)}
+.pin-sug-n{font-size:13.5px;font-weight:600}
+.pin-sug-s{font-size:11px;color:var(--p-g2);flex:none}
+.pin-sug-none{padding:11px 13px;font-size:12px;color:var(--p-g2)}
+.pin-acct-sel{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;border:1px solid rgba(138,180,248,.4);background:rgba(138,180,248,.09);border-radius:12px;padding:10px 12px}
+.pin-acct-n{font-size:13.5px;font-weight:700;color:var(--p-text)}
+.pin-acct-x{background:none;border:none;color:var(--p-g2);font-size:20px;line-height:1;cursor:pointer;padding:0 2px}
+.pin-pager{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+.pin-pg{background:none;border:1px solid var(--p-line);border-radius:10px;color:var(--p-text);font-family:inherit;font-size:12.5px;font-weight:600;padding:9px 13px;cursor:pointer}
+.pin-pg.off{opacity:.35;pointer-events:none}
+.pin-pg-l{font-size:11.5px;color:var(--p-g2);font-weight:600}
 .rep-rec-tap{cursor:pointer}
 .rep-rec-tap:active{filter:brightness(1.25)}
 .pinlogo-img{display:inline-block;vertical-align:middle;width:auto;flex:none;object-fit:contain;max-width:none;opacity:.92}
@@ -3539,9 +3554,9 @@ function paint(){ try{ updateSafari(); }catch(_e){}
   if(scr.think){
     wrap.innerHTML = build(`<div class="asst-a typing"><span></span><span></span><span></span></div>`);
     scrollTop();
-    setTimeout(()=>{ wrap.innerHTML = build(scr.html); scrollTop(); scr.after&&scr.after(); impBannerSync(); pmodeSync(); custOverlaySync(); if(typeof repQsSync==='function') repQsSync(); if(typeof updateBellBadge==='function') updateBellBadge(); if(typeof repTilesFit==='function') requestAnimationFrame(repTilesFit); }, 820);
+    setTimeout(()=>{ wrap.innerHTML = build(scr.html); scrollTop(); scr.after&&scr.after(); impBannerSync(); pmodeSync(); custOverlaySync(); if(typeof repQsSync==='function') repQsSync(); if(typeof updateBellBadge==='function') updateBellBadge(); if(typeof repTilesFit==='function') requestAnimationFrame(repTilesFit); if(typeof askAutoSize==='function') requestAnimationFrame(function(){ if(document.getElementById('askAlly')) askAutoSize(); }); }, 820);
   } else {
-    wrap.innerHTML = build(scr.html); scrollTop(); scr.after&&scr.after(); impBannerSync(); pmodeSync(); custOverlaySync(); if(typeof repQsSync==='function') repQsSync(); if(typeof updateBellBadge==='function') updateBellBadge(); if(typeof repTilesFit==='function') requestAnimationFrame(repTilesFit);
+    wrap.innerHTML = build(scr.html); scrollTop(); scr.after&&scr.after(); impBannerSync(); pmodeSync(); custOverlaySync(); if(typeof repQsSync==='function') repQsSync(); if(typeof updateBellBadge==='function') updateBellBadge(); if(typeof repTilesFit==='function') requestAnimationFrame(repTilesFit); if(typeof askAutoSize==='function') requestAnimationFrame(function(){ if(document.getElementById('askAlly')) askAutoSize(); });
   }
   if(typeof updateMenuBadge==='function') updateMenuBadge();
   if(typeof applyAnonChrome==='function') applyAnonChrome();
@@ -4137,6 +4152,12 @@ const VOICE_Qs = [
 let voiceIdx = 0;
 function nextVoiceQ(){ const q=VOICE_Qs[voiceIdx % VOICE_Qs.length]; voiceIdx++; return q; }
 function scheduleReply(text, idx){ setTimeout(()=>{ const reply=(typeof REP!=='undefined'&&REP&&REP.active)?repAllyReply(text):allyReply(text); if(flow.chat && flow.chat[idx] && flow.chat[idx].thinking){ flow.chat[idx]=Object.assign({role:'ally'}, reply); } if(document.querySelector('.chatmodal')) renderChatModal(); else if(cur && cur.id==='agent_chat') replace('agent_chat'); }, 2000); }
+function askAutoSize(el){
+  el = el || document.getElementById('askAlly'); if(!el) return;
+  if(!el.value){ el.style.height='24px'; return; }
+  el.style.height='0px';
+  el.style.height = Math.max(24, Math.min(150, el.scrollHeight)) + 'px';
+}
 function allyExpand(){ const w=document.getElementById('askWrap'); if(w) w.classList.add('open'); }
 ACTIONS.allyCollapse = () => { const w=document.getElementById('askWrap'); if(w) w.classList.remove('open'); const i=document.getElementById('askAlly'); if(i) i.blur(); };
 function chatThreadHtml(){ return (flow.chat||[]).map(function(m){ return m.role==='user' ? `<div class="cmsg cmsg-u"><div class="cbub cbub-u">${esc(m.text)}</div></div>` : (m.thinking ? `<div class="cmsg cmsg-a"><div class="cav">${SPARK_SVG}</div><div class="cbub cbub-a cbub-think"><span class="tdot"></span><span class="tdot"></span><span class="tdot"></span></div></div>` : `<div class="cmsg cmsg-a"><div class="cav">${SPARK_SVG}</div><div class="cbub-wrap"><div class="cbub cbub-a">${m.msg}</div>${chatRecords(m.records)}${(m.label&&(m.go||m.act))?`<button class="cbub-act" data-${m.go?'go':'act'}="${m.go||m.act}"${m.actP?` data-p='${JSON.stringify(m.actP)}'`:''}>${m.label}</button>`:''}</div></div>`); }).join(''); }
@@ -4475,15 +4496,15 @@ function tourBuild(){
   TOUR.steps = [
     { state:'home', target:()=>document.querySelector('.ask-box'), pad:10, title:'Meet Ally', body:'Your field-service assistant. Ask it anything in plain English, or use the shortcuts below. Here is a quick tour of the essentials.' },
     { state:'home', target:()=>document.getElementById('menuBtn'), title:'The menu', body:'Your way into every area of the portal — notifications, pending jobs, invoices, contracts, your fleet and more.' },
-    { state:'drawer', target:()=>document.querySelector('.drawer [data-go="notif_home"]'), title:'Notifications', body:'Updates from Summit land here — order confirmations, meter validations and replies to anything you have raised.' },
+    { state:'home', target:()=>document.getElementById('bellBtn'), title:'Notifications', body:'Updates from Summit land here — order confirmations, meter validations and replies to anything you have raised. The red count shows what you have not read.' },
     { state:'drawer', target:()=>document.querySelector('.drawer [data-go="pending_home"]'), title:'Pending jobs', body:'Everything in flight in one place — open service calls, orders being fulfilled and meter reads under review.' },
     { state:'drawer', target:()=>document.querySelector('.dw-signout'), title:'Signing out', body:'Done for the day? Sign out here to return to the account picker.' },
     { state:'home', target:()=>document.querySelector('.devbar'), title:'Your device', body:'You are always working on one machine. Tap the bar to open its full details — toner, meters, alerts and coverage.' },
     { state:'devmodal', target:()=>document.querySelector('.devmodal [data-mact="tab_contract"]'), title:'Contract coverage', body:'See exactly what is covered on this machine — the maintenance agreement, meter-group rates and any lease terms.' },
     { state:'home', target:()=>document.querySelector('.db-switch'), title:'Switch machine', body:'Working on a different device? Switch by scanning its QR code or picking from your fleet, without losing your place.' },
     { state:'home', target:()=>document.querySelector('.ask-box'), pad:10, title:'Ask Ally anything', body:'Type a question or a request — "order black toner", "why is my invoice overdue", "where is my engineer". Ally takes you straight there.' },
-    { state:'home', target:()=>document.getElementById('suggestBtn'), title:'Suggested questions', body:'Not sure where to start? Tap here for a set of ready-made prompts covering the most common things people ask.' },
-    { state:'home', target:()=>document.querySelector('.ask-mic'), title:'Voice prompts', body:'Prefer to talk? Tap the mic and Ally offers pre-filled voice prompts you can fire off hands-free.' },
+    { state:'askopen', target:()=>document.querySelector('.ask-suggested'), pad:6, title:'Suggested questions', body:'Not sure where to start? Ready-made prompts covering the most common things people ask \u2014 tap one and Ally takes it from there.' },
+    { state:'askopen', target:()=>document.querySelector('.ask-mic'), title:'Voice prompts', body:'Prefer to talk? Tap the mic and Ally offers pre-filled voice prompts you can fire off hands-free.' },
     { state:'home', target:()=>document.getElementById('homeTiles'), pad:6, title:'Your core actions', body:'The four things people do most, one tap away — order supplies, submit a meter read, report an issue and move equipment.' },
     { cond:()=>itTriageOn()&&isHelpdesk(), state:'home', target:()=>document.querySelector('#homeTiles [data-act="openITQueue"]'), title:'Your IT helpdesk', body:'With calls routed through your internal IT team, the tickets your users raise land right here. Review each one, then resolve it yourself or escalate it to Summit.' },
     { cond:()=>itTriageOn()&&isHelpdesk(), state:'itdetail', target:()=>document.querySelector('.ai-launch'), title:'AI service assist', body:'Open any ticket and tap AI service assist \u2014 it reads the user\u2019s description and photos, summarises the fault, and walks you through fixing it step by step, with one-tap resolve or escalate.' },
@@ -4524,7 +4545,9 @@ function tourEnsure(state, cb){
   if(state==='drawer'){ tourCloseModals(); if(cur.id!=='home'){ nav=[]; cur={id:'home'}; paint(); } if(!haveDrawer){ openDrawer(); opened=true; } }
   else if(state==='devmodal'){ tourCloseDrawer(); if(cur.id!=='home'){ nav=[]; cur={id:'home'}; paint(); } if(!haveDev){ openDeviceModal(D.scanned); opened=true; } }
   else if(state==='itdetail'){ tourCloseDrawer(); tourCloseModals(); const _n=(D.notifications||[]).find(x=>x.type==='it_ticket'&&x.status==='pending'); if(_n){ flow.itBack='it_queue'; nav=[]; cur={id:'notif_detail',p:{id:_n.id}}; paint(); } else { flow.itQueueFilter='open'; nav=[]; cur={id:'it_queue',p:{}}; paint(); } opened=true; }
-  else { tourCloseDrawer(); tourCloseModals(); if(cur.id!=='home'){ nav=[]; cur={id:'home'}; paint(); opened=true; } }
+  else if(state==='askopen'){ tourCloseDrawer(); tourCloseModals(); if(cur.id!=='home'){ nav=[]; cur={id:'home'}; paint(); opened=true; }
+    const w=document.getElementById('askWrap'); if(w && !w.classList.contains('open')){ w.classList.add('open'); opened=true; } }
+  else { tourCloseDrawer(); tourCloseModals(); const w2=document.getElementById('askWrap'); if(w2) w2.classList.remove('open'); if(cur.id!=='home'){ nav=[]; cur={id:'home'}; paint(); opened=true; } }
   setTimeout(cb, opened?(state==='itdetail'?1050:330):70);
 }
 function tourGo(i){
@@ -10710,6 +10733,18 @@ const REP_CAPS = {
   rep:        { viewAll:false, actionLeads:true,  reassign:false,  suspendDealer:false, createRoles:false, globalSettings:false, customerSettings:false, manageEndUsers:true, accountSettings:true }
 };
 function repUser(){ return REP_USERS.find(u=>u.id===REP.userId) || REP_USERS[0]; }
+function repUserEmail(u){
+  u = u || repUser(); if(!u) return '';
+  const parts = String(u.email||'').split('@');
+  let dom = parts[1] || 'summit.co';
+  try{ if(typeof dealer!=='undefined' && dealer && dealer.active && dealer.domain) dom = dealer.domain; }catch(e){}
+  let local = parts[0] || 'user';
+  try{
+    const nm = (typeof repCustom!=='undefined' && repCustom[u.id] && repCustom[u.id].name) ? repCustom[u.id].name : null;
+    if(nm) local = nm.toLowerCase().replace(/[^a-z0-9]+/g,'.').replace(/^\.+|\.+$/g,'');
+  }catch(e){}
+  return local + '@' + dom;
+}
 function repCap(k){ const r=(repUser()||{}).role; return (REP_CAPS[r]||{})[k]; }
 function repIsAdmin(){ return (repUser()||{}).role==='sysadmin'; }
 function repRoleLabel(u){ return REP_ROLE_LABEL[((u||repUser())||{}).role] || 'Sales Rep'; }
@@ -12533,7 +12568,7 @@ function openRepMenu(){
 SCREENS.rep_select = () => {
   return { ctx: null, q:null, think:false,
     html: `<div class="signin-hd">Choose an account to sign in</div>`
-      + REP_USERS.map(function(u,i){ const adm=(u.role==='sysadmin'||u.role==='salesadmin'); return `<button class="rep-prof${i===0?' rep-prof-primary':''}" data-act="repEnterAs" data-p='${JSON.stringify({id:u.id})}'><span class="rp-av">${repAvatar(u.id,52)}</span><span class="rp-b"><span class="rp-n">${esc(u.name)} <span class="rp-tag${adm?' rp-tag-admin':''}">${repRoleLabel(u)}</span></span><span class="rp-r">${repRoleLabel(u)} \u00b7 Summit</span><span class="rp-e">${esc(u.email)}</span></span><svg class="ra-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>`; }).join('')
+      + REP_USERS.map(function(u,i){ const adm=(u.role==='sysadmin'||u.role==='salesadmin'); return `<button class="rep-prof${i===0?' rep-prof-primary':''}" data-act="repEnterAs" data-p='${JSON.stringify({id:u.id})}'><span class="rp-av">${repAvatar(u.id,52)}</span><span class="rp-b"><span class="rp-n">${esc(u.name)} <span class="rp-tag${adm?' rp-tag-admin':''}">${repRoleLabel(u)}</span></span><span class="rp-r">${repRoleLabel(u)} \u00b7 Summit</span><span class="rp-e">${esc(repUserEmail(u))}</span></span><svg class="ra-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>`; }).join('')
       + grow() };
 };
 ACTIONS.repEnterAs = (p) => { const id=(p&&p.id)||'craig'; REP.userId=id; REP.account=null; updateProfileBtn(); const _q=document.querySelector('.rep-qs'); if(_q) _q.remove(); flow.rsState='form'; renderRepSignin(); };
@@ -12928,8 +12963,96 @@ function repPinCard(a, dev){
 }
 
 // --- Printanista Insights (account fleet telemetry) --------------------------
+/* ---- Printanista at portfolio level: status + account filters, paginated ---- */
+const PIN_PAGE = 20;
+const PIN_ACCT_MAX = 10;
+function pinF(){ return flow.pinF || (flow.pinF={status:'all', acct:null, q:'', page:0}); }
+function pinPortfolioRows(){
+  const f=pinF(); const out=[];
+  repBook().forEach(function(a){
+    if(f.acct && a.id!==f.acct) return;
+    (a.fleet||[]).forEach(function(d){
+      const st=d.status||'undiscovered';
+      if(f.status!=='all' && st!==f.status) return;
+      out.push({a:a, d:d});
+    });
+  });
+  return out;
+}
+function pinAcctMatches(q){
+  q=(q||'').trim().toLowerCase();
+  if(q.length<3) return null;
+  return repBook().filter(function(a){
+    return ((a.name||'')+' '+(a.num||'')+' '+(a.id||'')).toLowerCase().indexOf(q)>=0;
+  }).slice(0, PIN_ACCT_MAX);
+}
+function pinAcctSugHtml(){
+  const f=pinF();
+  const m=pinAcctMatches(f.q);
+  if(m===null) return '';
+  if(!m.length) return `<div class="pin-sug"><div class="pin-sug-none">No customer matches that.</div></div>`;
+  return `<div class="pin-sug">` + m.map(function(a){
+    return `<button class="pin-sug-r" data-act="repPinAcctPick" data-p='${JSON.stringify({id:a.id})}'><span class="pin-sug-n">${esc(a.name)}</span><span class="pin-sug-s">${esc(a.num||a.id)}</span></button>`;
+  }).join('') + `</div>`;
+}
+ACTIONS.repPinAcctSearch = (v) => {
+  const f=pinF(); f.q=v;
+  const box=document.getElementById('pinAcctSug'); if(box) box.innerHTML=pinAcctSugHtml();
+};
+ACTIONS.repPinAcctPick = (p) => { const f=pinF(); f.acct=(p&&p.id)||null; f.q=''; f.page=0; replace('rep_pinsights'); };
+ACTIONS.repPinAcctClear = () => { const f=pinF(); f.acct=null; f.q=''; f.page=0; replace('rep_pinsights'); };
+ACTIONS.repPinStatus = (v) => { const f=pinF(); f.status=v||'all'; f.page=0; replace('rep_pinsights'); };
+ACTIONS.repPinPage = (p) => { const f=pinF(); f.page=Math.max(0,(f.page||0)+((p&&p.d)||0)); replace('rep_pinsights'); };
+
+function repPinPortfolio(){
+  const f=pinF();
+  const all=[]; repBook().forEach(function(a){ (a.fleet||[]).forEach(function(d){ all.push({a:a,d:d}); }); });
+  const monN=all.filter(function(x){ return x.d.status==='monitored'; }).length;
+  const low=all.filter(function(x){ const t=x.d.tnr||{}; return Object.keys(t).some(function(k){ return t[k]<=15; }); }).length;
+  const alerts=all.filter(function(x){ return x.d.error; }).length;
+
+  const rows=pinPortfolioRows();
+  const pages=Math.max(1, Math.ceil(rows.length/PIN_PAGE));
+  if(f.page>pages-1) f.page=pages-1;
+  const from=f.page*PIN_PAGE, to=Math.min(rows.length, from+PIN_PAGE);
+  const page=rows.slice(from, to);
+
+  const statusSel = `<div class="rolesel-wrap"><select class="rolesel" onchange="ACTIONS.repPinStatus(this.value)">`
+    + [['all','All statuses'],['monitored','Monitored'],['disconnected','Disconnected'],['undiscovered','Undiscovered']]
+        .map(function(o){ return `<option value="${o[0]}"${f.status===o[0]?' selected':''}>${o[1]}</option>`; }).join('')
+    + `</select><svg class="rolesel-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>`;
+
+  const chosen = f.acct ? repAccount(f.acct) : null;
+  const acctFilter = chosen
+    ? `<div class="pin-acct-sel"><span class="pin-acct-n">${esc(chosen.name)}</span><button class="pin-acct-x" data-act="repPinAcctClear" aria-label="Clear customer filter">&times;</button></div>`
+    : `<div class="rep-searchbox pin-acct-box"><svg viewBox="0 0 24 24">${IC.search}</svg><input id="pinAcctQ" class="rep-searchin" placeholder="Filter by customer \u2014 type 3 letters\u2026" value="${esc(f.q||'')}" oninput="ACTIONS.repPinAcctSearch(this.value)" autocomplete="off"></div><div id="pinAcctSug">${pinAcctSugHtml()}</div>`;
+
+  const list = page.length
+    ? page.map(function(x){ return repPinCard(x.a, x.d); }).join('')
+    : notice(IC.filter, 'No devices match these filters.');
+
+  const pager = (pages>1)
+    ? `<div class="pin-pager"><button class="pin-pg${f.page<=0?' off':''}" data-act="repPinPage" data-p='{"d":-1}'>\u2039 Previous</button>`
+      + `<span class="pin-pg-l">Page ${f.page+1} of ${pages}</span>`
+      + `<button class="pin-pg${f.page>=pages-1?' off':''}" data-act="repPinPage" data-p='{"d":1}'>Next \u203a</button></div>`
+    : '';
+
+  return { ctx: ctxRep('Printanista'), q:null, think:false,
+    html: `<div class="pin-hd">${pinLogo(20)}<span class="pin-hd-sub">Insights</span></div>`
+      + ab('Live fleet telemetry across every account you can see. Filter by status or customer, and tap a device for its full readout.')
+      + `<div class="statcards"><div class="statcard"><div class="sc-b">${monN}/${all.length}</div><div class="sc-l">Monitored</div></div><div class="statcard"><div class="sc-b">${low}</div><div class="sc-l">Low toner</div></div><div class="statcard"><div class="sc-b">${alerts}</div><div class="sc-l">Alerts</div></div></div>`
+      + statusSel
+      + acctFilter
+      + `<div class="rep-lab">${rows.length?`Showing ${from+1}\u2013${to} of ${rows.length} device${rows.length===1?'':'s'}`:'No devices in view'}</div>`
+      + list
+      + pager
+      + grow() + ghost('Back to home','rep_home') };
+}
+
 SCREENS.rep_pinsights = (p) => {
-  const a=repAccount(p.id); if(!a) return SCREENS.rep_home(); REP.account=a.id;
+  const sc=repScope(p);
+  if(sc.mode==='portfolio'){ REP.account=null; if(!scenario.p) return SCREENS.rep_home(); return repPinPortfolio(); }
+  const a=sc.acct; REP.account=a.id;
   if(!scenario.p) return SCREENS.rep_insights({id:a.id});
   const fleet=(a.fleet||[]).filter(d=>repLocMatch(d.locId)); const pl=repDcaPill(a.dca);
   const head = `<div class="pin-hd">${pinLogo(20)}<span class="pin-hd-sub">Insights</span></div>`
@@ -13469,7 +13592,7 @@ function renderRepSignin(){
   ov.innerHTML=`<div class="rs-wrap">`
     + `<div class="rs-logo"><img src="${EAUTOMATE_LOGO}" alt="e-automate"></div>`
     + `<div class="rs-title">Sign in to <img class="rs-title-eci" src="${ECI_LOGO}" alt="ECI"></div>`
-    + `<div class="rs-field"><span class="rs-label">Email</span><input class="rs-input" type="email" value="${esc(repUser().email)}" disabled aria-label="Email"></div>`
+    + `<div class="rs-field"><span class="rs-label">Email</span><input class="rs-input" type="email" value="${esc(repUserEmail())}" disabled aria-label="Email"></div>`
     + `<button class="rs-next" data-rsact="next">Next</button>`
     + `</div>`;
 }
@@ -13756,6 +13879,7 @@ function repMenuItems(){
     add({icon:IC.person,  label:'End Users',        go:'rep_users',    p:{id:acct}, sec:'This account'});
     if(repCap('accountSettings')) add({icon:IC.gauge, label:'Account Settings', go:'rep_account_settings', p:{id:acct}, sec:'This account'});
   } else {
+    if(scenario.p) add({icon:IC.gauge, label:'Printanista Insights', go:'rep_pinsights', sec:null});
     add({icon:IC.doc,    label:'Invoices',  go:'rep_invoices', sec:null});
     if(scenario.m) add({icon:IC.pin, label:'Track a Technician', go:'rep_track', sec:null});
     add({icon:IC.bell,   label:'Notifications', go:'rep_notifs', sec:null, badge:(typeof repNotifUnread==='function')?repNotifUnread():0});
@@ -14332,7 +14456,10 @@ function launch(quick){
 }
 function quickEnter(){
   const o=document.querySelector('.loginscreen'); if(o) o.remove();
-  const ji=(D.users||[]).findIndex(u=>u && (u.name||'').indexOf('Jamie')>=0);
+  let ji=(D.users||[]).findIndex(u=>u && u.init==='JB');
+  if(ji<0) ji=(D.users||[]).findIndex(u=>u && /super/i.test(u.role||''));
+  if(ji<0) ji=(D.users||[]).findIndex(u=>u && (u.name||'').indexOf('Jamie')>=0);
+  if(ji<0 && (D.users||[]).length) ji=0;
   if(ji<0){ flow.loginPin=''; flow.loginState='welcome'; renderLogin(); return; }
   D.users.forEach(u=>{u.you=false;}); const u=D.users[ji]; u.you=true; ensureUserFields(u);
   D.scanned='EQBL001';
@@ -14387,7 +14514,7 @@ document.addEventListener('click', (e)=>{
   const g = t.closest('[data-go]'); if(g && g.closest('#appwrap')){ go(g.dataset.go, g.dataset.p?JSON.parse(g.dataset.p):{}); return; }
   const a = t.closest('[data-act]'); if(a && a.closest('#appwrap')){ ACTIONS[a.dataset.act](a.dataset.p?JSON.parse(a.dataset.p):{}); return; }
 });
-document.addEventListener('input', (e)=>{ if(e.target && e.target.id==='paySearch') applyPayFilter(); if(e.target && e.target.id==='invSearch') filterAccInvoices(); if(e.target && e.target.id==='repInvSearch') filterRepInvoices(); if(e.target && e.target.id==='pickSearch') filterPickList(); if(e.target && e.target.id==='userSearch') filterUsersList(); if(e.target && e.target.id==='itQueueSearch') filterITQueue(); if(e.target && /^pf[A-Z]/.test(e.target.id||'')) flow.pfDirty=true; if(e.target && e.target.classList && e.target.classList.contains('ipbox')) ipBoxInput(e.target); if(e.target && e.target.id==='cxsSolved') cxsSolvedInput(e.target); });
+document.addEventListener('input', (e)=>{ if(e.target && e.target.id==='paySearch') applyPayFilter(); if(e.target && e.target.id==='invSearch') filterAccInvoices(); if(e.target && e.target.id==='repInvSearch') filterRepInvoices(); if(e.target && e.target.id==='askAlly') askAutoSize(e.target); if(e.target && e.target.id==='pickSearch') filterPickList(); if(e.target && e.target.id==='userSearch') filterUsersList(); if(e.target && e.target.id==='itQueueSearch') filterITQueue(); if(e.target && /^pf[A-Z]/.test(e.target.id||'')) flow.pfDirty=true; if(e.target && e.target.classList && e.target.classList.contains('ipbox')) ipBoxInput(e.target); if(e.target && e.target.id==='cxsSolved') cxsSolvedInput(e.target); });
 document.addEventListener('keydown', ipBoxKey);
 document.addEventListener('pointerdown',(e)=>{ _ssSuppress=false; const el=(e.target&&e.target.closest)?e.target.closest('.ss-swipe'):null; if(el){ _ssPOn=true; _ssPX=e.clientX; _ssPY=e.clientY; } else { _ssPOn=false; } });
 document.addEventListener('pointerup',(e)=>{ if(!_ssPOn){ return; } _ssPOn=false; if(_ssPX==null) return; const dx=e.clientX-_ssPX, dy=e.clientY-_ssPY; _ssPX=null; if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)*1.3 && cur && cur.id==='ss_steps'){ _ssSuppress=true; if(dx<0){ ACTIONS.ssNext(); } else { ACTIONS.ssPrev(); } } });
