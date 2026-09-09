@@ -3,7 +3,7 @@
 An installable, offline-capable version of the Ally QR Assist prototype. It installs
 straight from the browser (no app store) and runs full-screen like a native app.
 
-**This build: 8 Sep 2026** — service-worker cache `ally-qr-assist-2026-09-08`.
+**This build: 9 Sep 2026** — service-worker cache `ally-qr-assist-2026-09-08`.
 
 ## Files
 - `index.html` — the app (all styling/logic inlined)
