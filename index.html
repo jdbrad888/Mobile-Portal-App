@@ -2514,6 +2514,8 @@ button.rep-rec{cursor:pointer}
 .ca-card{background:var(--p-card);border:1px solid var(--p-line);border-radius:14px;padding:13px 14px;margin-bottom:10px}
 .ca-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .ca-ref{font-size:14.5px;font-weight:800;color:var(--p-text)}
+.chip.perm-ro{opacity:.72;cursor:default;pointer-events:none}
+.perm-rorole{margin-top:6px;border:1px solid var(--p-line);border-radius:11px;padding:11px 13px;font-size:13.5px;font-weight:700;color:var(--p-text);background:rgba(255,255,255,.04)}
 .mtr-hd{border:1px solid var(--p-line);border-radius:14px;padding:13px 14px;margin-top:10px;background:var(--p-card)}
 .mtr-hd-t{display:flex;align-items:baseline;gap:8px}
 .mtr-hd-n{font-size:15px;font-weight:800;color:var(--p-text)}
@@ -9841,11 +9843,31 @@ const PERM_SEE=['Service history','Order history','Account history','Meter histo
 /* ---------- user profile (banner avatar → profile → impact modal) ---------- */
 const AV_COLORS=['#3a4658','#4a3a58','#3a5847','#583f3a','#3a4f58','#553a58'];
 function esc(s){ return (s==null?'':(''+s)).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+/* `init` is the record key and must not change, but the initials shown on a
+   colour avatar should follow whatever name the overlay applied. */
+function userInitials(u){
+  if(!u) return '?';
+  const c=(typeof userCustom!=='undefined') ? userCustom[u.init] : null;
+  if(!c || !c.name) return u.init || '?';
+  const parts=String(c.name).trim().split(/\s+/).filter(Boolean);
+  const s=((parts[0]||'')[0]||'')+((parts[1]||'')[0]||'');
+  return s ? s.toUpperCase() : (u.init||'?');
+}
+/* The photo to restore when someone taps the camera: the overlay's picture if
+   one was supplied, then this user's own seeded photo. */
+function userPhotoSrc(u){
+  if(!u) return JAMIE_PHOTO;
+  const c=(typeof userCustom!=='undefined') ? userCustom[u.init] : null;
+  if(c && c.pic) return c.pic;
+  const d=(typeof ucDef==='function') ? ucDef(u.init) : null;
+  if(d && d.defPic) return d.defPic;
+  return u._pic0 || JAMIE_PHOTO;
+}
 function userAvatar(u, size){
   const s=size||30; const pic=u&&u.pic; let inner;
   if(pic&&pic.type==='photo'&&pic.src) inner=`<span class="uav uav-img" style="width:${s}px;height:${s}px"><img src="${pic.src}" alt=""></span>`;
   else if(pic&&pic.type==='photo') inner=`<span class="uav uav-photo" style="width:${s}px;height:${s}px"><svg viewBox="0 0 24 24">${IC.person}</svg></span>`;
-  else { const col=(pic&&pic.color)||AV_COLORS[0]; inner=`<span class="uav" style="width:${s}px;height:${s}px;background:${col};font-size:${Math.round(s*0.4)}px">${(u&&u.init)||'?'}</span>`; }
+  else { const col=(pic&&pic.color)||AV_COLORS[0]; inner=`<span class="uav" style="width:${s}px;height:${s}px;background:${col};font-size:${Math.round(s*0.4)}px">${esc(userInitials(u))}</span>`; }
   const badge=(typeof userTopBadge==='function')?userTopBadge(u):null;
   if(!badge) return inner;
   const es=Math.max(13, Math.round(s*0.46));
@@ -9864,6 +9886,7 @@ function officeAddress(off){
 }
 function syncUserAddress(u){ const oa=officeAddress(u.office); u.address=oa.address; u.city=oa.city; u.zip=oa.zip; return u; }
 function ensureUserFields(u){
+  if(u && u.pic && u.pic.type==='photo' && u.pic.src && !u._pic0) u._pic0=u.pic.src;
   if(u && !u._ready){
     const parts=(u.name||'').split(/\s+/);
     u.first=u.first||parts[0]||''; u.last=u.last||parts.slice(1).join(' ')||'';
@@ -10036,8 +10059,8 @@ SCREENS.profile = () => {
       act('View my Impact','openImpact',null,'ghost') +
       act('Save changes','saveProfile') };
 };
-ACTIONS.profUpload = () => { meUser().pic={type:'photo', src:JAMIE_PHOTO}; flow.pfDirty=true; refreshProfAv(); updateProfileBtn(); };
-ACTIONS.profColor = (p) => { meUser().pic={type:'color',color:p.c}; flow.pfDirty=true; refreshProfAv(); updateProfileBtn(); };
+ACTIONS.profUpload = () => { const u=ensureUserFields(meUser())||meUser(); u.pic={type:'photo', src:userPhotoSrc(u)}; flow.pfDirty=true; refreshProfAv(); updateProfileBtn(); };
+ACTIONS.profColor = (p) => { const u=ensureUserFields(meUser())||meUser(); u.pic={type:'color',color:p.c}; flow.pfDirty=true; refreshProfAv(); updateProfileBtn(); };
 ACTIONS.pfOffice = (p) => { flow.pfOffice=p.o; flow.pfDirty=true; document.querySelectorAll('#appwrap .offpill').forEach(el=>el.classList.toggle('on', el.getAttribute('data-o')===p.o)); const oa=officeAddress(p.o); const set=(id,v)=>{ const e=document.getElementById(id); if(e) e.value=v||''; }; set('pfAddr',oa.address); set('pfCity',oa.city); set('pfZip',oa.zip); };
 function doSaveProfile(){ const g=id=>((document.getElementById(id)||{}).value||'').trim(); const u=meUser(); u.first=g('pfFirst')||u.first; u.last=g('pfLast'); u.name=((u.first+' '+u.last).trim())||u.name; u.title=g('pfTitle')||u.title; u.phone=g('pfPhone')||u.phone; u.altPhone=g('pfAlt'); if(flow.pfOffice) u.office=flow.pfOffice; u.address=g('pfAddr'); u.city=g('pfCity'); u.zip=g('pfZip'); u.init=(((u.first[0]||'')+(u.last[0]||''))||u.init).toUpperCase(); updateProfileBtn(); flow.pfDirty=false; }
 ACTIONS.saveProfile = () => { doSaveProfile(); go('profile_saved'); };
@@ -10297,11 +10320,12 @@ SCREENS.my_locations = () => {
   const u=meUser(); const canEdit=hasPerm('User edit');
   return { ctx: ctxAcct('Locations'), q:null, think:true,
     html: ab(`The office locations you\u2019re assigned to (${userLocations(u).length}).`) +
-      locationsListHtml(u) + grow() +
-      (canEdit ? act('Manage my locations','manageMyLocations',null) : act('Request access to another location','openRequestLocations',null)) +
+      locationsListHtml(u) +
+      notice(IC.shield, 'Your own location access is set by another administrator \u2014 you can\u2019t change it yourself.') + grow() +
+      act('Request access to another location','openRequestLocations',null) +
       ghost('Back','profile') };
 };
-ACTIONS.manageMyLocations = () => { const i=myIndex(); if(i>=0) openLocationsModal(i); };
+ACTIONS.manageMyLocations = () => ACTIONS.openRequestLocations();   /* self-service location editing is closed — route to the request instead */
 ACTIONS.signOutNow = () => signOut();
 function itOpenCount(){ return (D.notifications||[]).filter(n=>n.type==='it_ticket'&&n.status==='pending').length; }
 SCREENS.it_queue = () => {
@@ -10484,11 +10508,14 @@ function openLocationsModal(i){
   const u=ensureUserFields(D.users[i]); flow.locsUser=i;
   if(!Array.isArray(u.locations)) u.locations=(D.offices||[]).slice();
   const old=scr.querySelector('.locsmodal'); if(old) old.remove();
-  const chip=(o)=>{ const on=u.locations.indexOf(o)>=0; return `<button class="chip loctag${on?' on':''}" data-loc="${esc(o)}">${on?'\u2713 ':''}${esc(o.split(' \u00b7 ')[0])}</button>`; };
+  const self=isSelfUser(i);
+  const chip=(o)=>{ const on=u.locations.indexOf(o)>=0; return `<button class="chip loctag${on?' on':''}${self?' perm-ro':''}"${self?'':` data-loc="${esc(o)}"`}>${on?'\u2713 ':''}${esc(o.split(' \u00b7 ')[0])}</button>`; };
   const ov=document.createElement('div'); ov.className='locsmodal modal open';
   ov.innerHTML=`<div class="mback"></div><div class="msheet" style="max-height:88%"><div class="msheet-h"><span class="mtitle">${esc(u.first||u.name)}\u2019s locations</span><span class="mx loc-x">&times;</span></div><div class="msheet-b">`
-    + `<p class="help">Choose which offices ${esc(u.first||u.name)} can access. Their local office must be one of these.</p>`
-    + `<div class="loc-allrow"><button class="loc-allbtn" data-locall="1">Select all</button><button class="loc-allbtn" data-locnone="1">Deselect all</button></div>`
+    + (self
+        ? `<p class="help">The offices you can access. Another administrator has to change this \u2014 you can\u2019t widen or narrow your own access.</p>`
+        : `<p class="help">Choose which offices ${esc(u.first||u.name)} can access. Their local office must be one of these.</p>`
+          + `<div class="loc-allrow"><button class="loc-allbtn" data-locall="1">Select all</button><button class="loc-allbtn" data-locnone="1">Deselect all</button></div>`)
     + `<div class="chips">${(D.offices||[]).map(chip).join('')}</div>`
     + `<button class="cta" style="margin-top:16px" data-locdone="1">Done</button>`
     + `</div></div>`;
@@ -10500,6 +10527,7 @@ function locsModalClick(e){
   const t=e.target; const ov=t.closest('.locsmodal'); if(!ov) return;
   const u=D.users[flow.locsUser]; if(!u) return; if(!Array.isArray(u.locations)) u.locations=(D.offices||[]).slice();
   if(t.closest('.mback')||t.closest('.loc-x')||t.closest('[data-locdone]')){ locsDone(); ov.remove(); return; }
+  if(isSelfUser(flow.locsUser)) return;
   if(t.closest('[data-locall]')){ u.locations=(D.offices||[]).slice(); locsRefresh(ov,u); return; }
   if(t.closest('[data-locnone]')){ u.locations=[]; locsRefresh(ov,u); return; }
   const tag=t.closest('.loctag'); if(!tag) return;
@@ -10518,18 +10546,24 @@ function locsDone(){
   }
   if(!onEdit && cur && (cur.id==='users_profile' || cur.id==='my_locations')) replace(cur.id, cur.p);
 }
+/* Nobody edits their own access, whatever permissions they hold — both modals
+   drop to read-only when the target is the signed-in user. */
+function isSelfUser(i){ const u=(D.users||[])[i]; return !!(u && u.you); }
 function permsModalInner(i){
   const u=ensureUserFields(D.users[i]); ensureRoles();
-  const admin=amAdmin();
-  const pill=(l)=>`<button class="chip permtag${(u.perms&&u.perms[l])?' on':''}" data-perm="${esc(l)}">${(u.perms&&u.perms[l])?'\u2713 ':''}${l}</button>`;
+  const self=isSelfUser(i);
+  const admin=amAdmin() && !self;
+  const pill=(l)=>`<button class="chip permtag${(u.perms&&u.perms[l])?' on':''}${self?' perm-ro':''}"${self?'':` data-perm="${esc(l)}"`}>${(u.perms&&u.perms[l])?'\u2713 ':''}${l}</button>`;
   return `<div class="mback"></div><div class="msheet" style="max-height:90%"><div class="msheet-h"><span class="mtitle">${esc(u.first||u.name)}\u2019s access</span><span class="mx pm-x">&times;</span></div><div class="msheet-b">`
     + `<div class="qa-lab">Role</div>`
-    + `<p class="help" style="margin-top:0">Assign a role to copy its permissions${admin?', or fine-tune below \u2014 changes save as a Custom set for this user only, they don\u2019t alter the role':''}.</p>`
-    + roleSelectHTML(u, 'ACTIONS.roleSelect(this.value)', 'permRoleSel')
+    + (self
+        ? `<p class="help" style="margin-top:0">This is your own access. Another administrator has to change it \u2014 you can\u2019t grant or remove your own permissions.</p><div class="perm-rorole">${esc(u.role||'\u2014')}</div>`
+        : `<p class="help" style="margin-top:0">Assign a role to copy its permissions${admin?', or fine-tune below \u2014 changes save as a Custom set for this user only, they don\u2019t alter the role':''}.</p>`
+          + roleSelectHTML(u, 'ACTIONS.roleSelect(this.value)', 'permRoleSel'))
     + (admin?`<button class="chip roleman" data-rolesmanage="1">${svg(IC.shield)} Manage roles</button>`:'')
     + (admin?`<div class="qa-lab" style="margin-top:12px">Copy from another user</div><p class="help" style="margin-top:0">Applies their exact permissions and switches this user to a Custom set.</p><div class="rolesel-wrap"><select class="rolesel" onchange="ACTIONS.copyFromUser(this.value)"><option value="">Copy permissions from\u2026</option>${(D.users||[]).map(function(cu,cj){ return (cj!==i && cu && cu.status==='Active') ? `<option value="${cj}">${esc(cu.name)} \u00b7 ${esc(detectRole(ensureUserFields(cu)))}</option>` : ''; }).join('')}</select><svg class="rolesel-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>`:'')
-    + `<div class="qa-lab" style="margin-top:13px">What they can do</div><div class="chips">${PERM_DO.map(pill).join('')}</div>`
-    + `<div class="qa-lab">What they can see &amp; manage</div><div class="chips">${PERM_SEE.map(pill).join('')}</div>`
+    + `<div class="qa-lab" style="margin-top:13px">${self?'What you can do':'What they can do'}</div><div class="chips">${PERM_DO.map(pill).join('')}</div>`
+    + `<div class="qa-lab">${self?'What you can see &amp; manage':'What they can see &amp; manage'}</div><div class="chips">${PERM_SEE.map(pill).join('')}</div>`
     + `<button class="cta" style="margin-top:14px" data-permdone="1">Done</button>`
     + `</div></div>`;
 }
@@ -10553,6 +10587,7 @@ function permsModalClick(e){
   if(t.closest('.mback')||t.closest('.pm-x')||t.closest('[data-permdone]')){ ov.remove(); if(cur&&(cur.id==='users_profile'||cur.id==='users_edit')) replace(cur.id,cur.p); return; }
   if(t.closest('[data-rolesmanage]')){ ov.remove(); go('roles_list'); return; }
   const tag=t.closest('.permtag'); if(!tag) return;
+  if(isSelfUser(flow.permsUser)) return;
   const perm=tag.getAttribute('data-perm'); const u=D.users[flow.permsUser]; u.perms=u.perms||{}; u.perms[perm]=!u.perms[perm]; u._forceCustom=false;
   tag.classList.toggle('on', u.perms[perm]); tag.textContent=(u.perms[perm]?'\u2713 ':'')+perm;
   u.role=detectRole(u);
@@ -10640,7 +10675,7 @@ function applyDealer(root){
   }
   if(dealer.logo){
     root.querySelectorAll('svg.mark').forEach(svg=>{ const img=document.createElement('img'); img.className='mark dealer-logo'; img.setAttribute('data-dealer','1'); img.src=dealer.logo; img.alt=dealer.name||'Logo'; svg.replaceWith(img); });
-    root.querySelectorAll('#appwrap .brandband .brand-tx').forEach(el=>{ el.style.display='none'; });
+    root.querySelectorAll('.brandband .brand-tx').forEach(el=>{ el.style.display='none'; });   /* an uploaded logo is a full lockup — the wordmark beside it just collides */
     root.querySelectorAll('.brand-s').forEach(el=>{ el.style.display='none'; });
   }
 }
@@ -13268,7 +13303,9 @@ function impValidating(a, uIdx, u, ov){ const bd=ov.querySelector('.cf-body'); i
 function doImpersonate(a, uIdx, u, mode){
   IMPERSONATE = { userId:REP.userId, account:REP.account, cur:{id:'rep_user_detail', p:{id:a.id, u:uIdx}}, acctId:a.id, uInit:u.init, uName:euName(u), dealerName:(repUser()||{}).name, mode:(mode==='view'?'view':'full') };
   const key=(a.id==='ME-0233')?'meridian':'brightstone';
-  D = JSON.parse(JSON.stringify(DATA[key])); D._repKey=key; D.scanned=Object.keys(D.devices)[0];
+  /* No QR has been scanned, so the session starts with no device in context —
+     the header offers Find device until they pick one. */
+  D = JSON.parse(JSON.stringify(DATA[key])); D._repKey=key; D.scanned=null;
   if(typeof applyUserCustom==='function') applyUserCustom();
   let idx=(D.users||[]).findIndex(function(x){ return x.init===u.init; });
   if(idx<0){ D.users.push({ init:u.init, name:u.name, role:u.role, status:'Active', email:u.email, perms:Object.assign({}, u.perms||{}), pin:'0000' }); idx=D.users.length-1; }
